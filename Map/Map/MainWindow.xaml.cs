@@ -1,17 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.IO.Ports;
 
 namespace Map
@@ -21,33 +10,58 @@ namespace Map
     /// </summary>
     public partial class MainWindow : Window
     {
-        SerialPort ArduinoSerial = new SerialPort();
-        bool run = true;
-        string COM;
+        static SerialPort ArduinoSerial = new SerialPort();
+        static bool run = true;
+        static string COM;
+        Thread ArduinoThread = new Thread(new ThreadStart(ArduinoRead));
 
         public MainWindow()
         {
             InitializeComponent();
+            ArduinoThread.IsBackground = true;
         }
 
-        private void ArduinoRead()
+        private static void ArduinoRead()
         {
             ArduinoSerial.BaudRate = 9600;
             ArduinoSerial.PortName = COM;
-            Console.Write(COM);
-            ArduinoSerial.Open();
+            Console.WriteLine(COM);
+            try
+            {
+                ArduinoSerial.Open();
+            }
+            catch (Exception)
+            {
+                return;
+            }
 
             while (run)
             {
                 string trigger = ArduinoSerial.ReadLine();
+                Console.WriteLine(trigger);
             }
         }
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
-            COM = COMBox.SelectedValue.ToString();
-            ArduinoRead();
+            COM = COMBox.SelectedValue.ToString().Split(':')[1].Split(' ')[1];
+            run = true;
+            try
+            {
+                ArduinoThread.Start();
+            }
+            catch (Exception)
+            {
+                ArduinoThread.Resume();
+            }
+            
         }
 
+        private void StopButton_Click(object sender, RoutedEventArgs e)
+        {
+            run = false;
+            while (!ArduinoThread.IsAlive) ;
+            ArduinoThread.Suspend();
+        }
     }
 }
