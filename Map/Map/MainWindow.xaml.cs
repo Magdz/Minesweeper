@@ -22,9 +22,9 @@ namespace Map
         static string COM;
         Thread ArduinoThread = new Thread(new ThreadStart(ArduinoRead));
 
-        static int mapLength = 9;
+        static int mapLength = 19;
         static int column = 0;
-        static int row = 9;
+        static int row = 19;
         static bool left = true;
 
         public MainWindow()
@@ -92,6 +92,10 @@ namespace Map
                         {
                             column--;
                         }
+                    }
+                    if(row < 0)
+                    {
+                        row = 0;
                     }
                 }
             }
